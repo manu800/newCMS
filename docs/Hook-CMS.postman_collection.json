@@ -1,0 +1,290 @@
+{
+  "info": {
+    "name": "Hook CMS API",
+    "description": "Full backend API surface used by the CMS admin app and the public PWA. Auth: run 'Login' first — it auto-saves the token to the {{token}} collection variable, used by every protected request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8010" },
+    { "key": "token", "value": "" },
+    { "key": "property_id", "value": "" },
+    { "key": "theme_id", "value": "" },
+    { "key": "component_id", "value": "" },
+    { "key": "page_id", "value": "" },
+    { "key": "navigation_id", "value": "" },
+    { "key": "article_id", "value": "" },
+    { "key": "property_slug", "value": "hook" },
+    { "key": "page_slug", "value": "home" },
+    { "key": "article_slug", "value": "" },
+    { "key": "category_slug", "value": "sports" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.access_token) { pm.collectionVariables.set('token', data.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"shailendra@hook.online\",\n  \"password\": \"admin123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": { "method": "GET", "url": "{{base_url}}/api/auth/me" }
+        }
+      ]
+    },
+    {
+      "name": "Properties",
+      "item": [
+        { "name": "List Properties", "request": { "method": "GET", "url": "{{base_url}}/api/properties" } },
+        { "name": "Get Property", "request": { "method": "GET", "url": "{{base_url}}/api/properties/{{property_id}}" } },
+        {
+          "name": "Create Property (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/properties",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hook\",\n  \"slug\": \"hook\",\n  \"logo\": \"/logo.png\",\n  \"host\": \"https://hook.online\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Property (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/properties/{{property_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hook\",\n  \"active_theme_id\": \"{{theme_id}}\",\n  \"active_home_page_id\": \"{{page_id}}\",\n  \"theme_config\": {\n    \"mobile_theme_id\": null,\n    \"desktop_theme_id\": null\n  },\n  \"status\": \"active\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Themes",
+      "item": [
+        { "name": "List Themes", "request": { "method": "GET", "url": "{{base_url}}/api/themes" } },
+        { "name": "Get Theme", "request": { "method": "GET", "url": "{{base_url}}/api/themes/{{theme_id}}" } },
+        { "name": "Get Theme Versions", "request": { "method": "GET", "url": "{{base_url}}/api/themes/{{theme_id}}/versions" } },
+        {
+          "name": "Create Theme (designer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/themes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hook Modern\",\n  \"slug\": \"hook-modern\",\n  \"device_type\": null,\n  \"design_tokens\": {\n    \"colors\": { \"primary\": \"#E11D48\", \"secondary\": \"#0F172A\", \"background\": \"#FFFFFF\", \"surface\": \"#F8FAFC\", \"text\": \"#111827\", \"muted\": \"#64748B\" },\n    \"typography\": { \"fontFamily\": \"Inter\", \"headingWeight\": 700, \"bodyWeight\": 400 },\n    \"spacing\": { \"xs\": 4, \"sm\": 8, \"md\": 16, \"lg\": 24 },\n    \"radius\": { \"small\": 6, \"medium\": 12, \"large\": 20 },\n    \"shadows\": { \"sm\": \"0 1px 2px rgba(0,0,0,0.05)\", \"md\": \"0 4px 6px rgba(0,0,0,0.1)\", \"lg\": \"0 10px 15px rgba(0,0,0,0.15)\" },\n    \"breakpoints\": { \"mobile\": 0, \"tablet\": 768, \"desktop\": 1024 }\n  },\n  \"component_mapping\": { \"hero\": \"centered\", \"news_card\": \"vertical\", \"news_grid\": \"three_column\" }\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Theme (designer)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/themes/{{theme_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"design_tokens\": {\n    \"colors\": { \"primary\": \"#E11D48\" }\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Activate Theme (designer)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/themes/{{theme_id}}/activate?property_id={{property_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Components",
+      "item": [
+        { "name": "List Components", "request": { "method": "GET", "url": "{{base_url}}/api/components" } },
+        { "name": "Get Component", "request": { "method": "GET", "url": "{{base_url}}/api/components/{{component_id}}" } },
+        {
+          "name": "Create Component (designer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/components",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"News Card\",\n  \"slug\": \"news-card\",\n  \"type\": \"news_card\",\n  \"variants\": [\n    { \"name\": \"Vertical\", \"slug\": \"vertical\" },\n    { \"name\": \"Horizontal\", \"slug\": \"horizontal\" },\n    { \"name\": \"Featured\", \"slug\": \"featured\" }\n  ],\n  \"fields\": [\n    { \"name\": \"showSummary\", \"label\": \"Show Summary\", \"type\": \"boolean\", \"default\": true }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Component (designer)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/components/{{component_id}}",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"active\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pages",
+      "item": [
+        { "name": "List Pages", "request": { "method": "GET", "url": "{{base_url}}/api/pages?property_id={{property_id}}" } },
+        { "name": "Get Page", "request": { "method": "GET", "url": "{{base_url}}/api/pages/{{page_id}}" } },
+        { "name": "Preview Page (draft, resolved)", "request": { "method": "GET", "url": "{{base_url}}/api/pages/{{page_id}}/preview" } },
+        { "name": "Get Page Versions", "request": { "method": "GET", "url": "{{base_url}}/api/pages/{{page_id}}/versions" } },
+        {
+          "name": "Create Page (editor)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/pages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Home\",\n  \"slug\": \"home\",\n  \"type\": \"home\",\n  \"property_id\": \"{{property_id}}\",\n  \"sections\": []\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Page / Save Draft (editor)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/pages/{{page_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sections\": [\n    {\n      \"id\": \"s1\",\n      \"type\": \"news_grid\",\n      \"variant\": \"three_column\",\n      \"title\": \"Latest News\",\n      \"data_source\": { \"type\": \"latest\", \"limit\": 10 },\n      \"config\": {\n        \"columns\": { \"mobile\": 1, \"tablet\": 2, \"desktop\": 3 },\n        \"spacing\": { \"top\": 20, \"bottom\": 20 }\n      },\n      \"props\": {}\n    }\n  ]\n}"
+            }
+          }
+        },
+        { "name": "Publish Page (editor)", "request": { "method": "POST", "url": "{{base_url}}/api/pages/{{page_id}}/publish" } },
+        { "name": "Duplicate Page (editor)", "request": { "method": "POST", "url": "{{base_url}}/api/pages/{{page_id}}/duplicate" } },
+        { "name": "Delete Page (editor)", "request": { "method": "DELETE", "url": "{{base_url}}/api/pages/{{page_id}}" } }
+      ]
+    },
+    {
+      "name": "Navigation",
+      "item": [
+        { "name": "List Navigation", "request": { "method": "GET", "url": "{{base_url}}/api/navigation?property_id={{property_id}}" } },
+        {
+          "name": "Create Navigation (designer/editor)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/navigation",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"property_id\": \"{{property_id}}\",\n  \"type\": \"bottom_navigation\",\n  \"items\": [\n    { \"id\": \"n1\", \"label\": \"Home\", \"icon\": \"home\", \"url\": \"/\" },\n    { \"id\": \"n2\", \"label\": \"Trending\", \"icon\": \"fire\", \"url\": \"/trending\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Navigation (designer/editor)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/navigation/{{navigation_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"id\": \"n1\", \"label\": \"Home\", \"icon\": \"home\", \"url\": \"/\" }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Articles",
+      "item": [
+        { "name": "List Articles", "request": { "method": "GET", "url": "{{base_url}}/api/articles?limit=50&skip=0" } },
+        { "name": "Get Article by ID", "request": { "method": "GET", "url": "{{base_url}}/api/articles/{{article_id}}" } },
+        { "name": "Get Article by Slug", "request": { "method": "GET", "url": "{{base_url}}/api/articles/slug/{{article_slug}}" } },
+        { "name": "Trending Articles", "request": { "method": "GET", "url": "{{base_url}}/api/articles/trending?limit=10" } },
+        { "name": "Latest Articles", "request": { "method": "GET", "url": "{{base_url}}/api/articles/latest?limit=10" } },
+        { "name": "Articles by Category", "request": { "method": "GET", "url": "{{base_url}}/api/articles/category/{{category_slug}}?limit=10" } },
+        {
+          "name": "Create Article (editor)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/articles",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"script_headline\": \"India wins the match in a thrilling final\",\n  \"script_slug\": \"india-wins-thrilling-final\",\n  \"script_summary\": \"A last-over win seals the series.\",\n  \"script_thumbnail\": \"https://picsum.photos/seed/article1/800/450\",\n  \"parent_category\": { \"id\": \"cat-sports\", \"name\": \"Sports\", \"slug\": \"sports\" },\n  \"tags\": [{ \"name\": \"Cricket\", \"slug\": \"cricket\" }],\n  \"is_trending\": true,\n  \"is_breaking\": \"false\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Article (editor)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/articles/{{article_id}}",
+            "body": { "mode": "raw", "raw": "{\n  \"script_headline\": \"Updated headline\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Versions",
+      "item": [
+        {
+          "name": "List Versions (theme|page|navigation)",
+          "request": { "method": "GET", "url": "{{base_url}}/api/versions/theme/{{theme_id}}" }
+        },
+        {
+          "name": "Restore Version (editor/designer)",
+          "request": { "method": "POST", "url": "{{base_url}}/api/versions/theme/{{theme_id}}/1/restore" }
+        }
+      ]
+    },
+    {
+      "name": "PWA (Public — used by the PWA app)",
+      "item": [
+        {
+          "name": "PWA Config (theme + nav + property)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{base_url}}/api/pwa/config/{{property_slug}}?device=desktop"
+          }
+        },
+        {
+          "name": "PWA Page (resolved sections + articles)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{base_url}}/api/pwa/page/{{property_slug}}/{{page_slug}}"
+          }
+        }
+      ]
+    }
+  ]
+}

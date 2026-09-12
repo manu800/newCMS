@@ -1,0 +1,63 @@
+1. Backend (FastAPI) — port 8010
+
+cd backend
+source .venv/bin/activate   # venv already created; if missing: python3 -m venv .venv && pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8010
+Needs MongoDB reachable at MONGO_URI (see backend/.env) and optionally Redis (cache degrades gracefully if absent).
+
+Seed demo data (run once, or anytime to reset):
+
+
+cd backend
+source .venv/bin/activate
+python -m app.scripts.seed
+
+2. CMS — port 3000
+
+npm run dev:cms
+# or: cd apps/cms && npm run dev -- -p 3000
+Open http://localhost:3000/login → shailendra@hook.online / admin123.
+
+3. PWA — port 3001
+
+npm run dev:pwa
+# or: cd apps/pwa && npm run dev -- -p 3001
+Open http://localhost:3001.
+
+
+
+
+
+The core idea
+The PWA has zero hardcoded page layouts. Every route just asks the CMS backend "what does this page look like right now?" and renders whatever comes back. Changing a theme or page layout in the CMS changes what the PWA shows — no PWA code changes, no redeploy.
+
+Folder structure
+
+apps/pwa/
+├── app/              route folders (/, /trending, /sports, /article/[slug], /[slug]...)
+├── components/        the actual React components (Hero, NewsCard, NewsGrid, ...)
+├── renderer/           the machinery that turns CMS JSON into React
+└── lib/api.ts          the only place that talks to the backend
+Request flow (e.g. someone loads /trending)
+trending/page.tsx renders <PageRoute pageSlug="trending" />
+renderer/page-route.tsx fires two parallel fetches via lib/api.ts:
+GET /api/pwa/config/hook → property info, active theme's design tokens, navigation
+GET /api/pwa/page/hook/trending → that page's list of sections, each already resolved with its component definition and real article data (the backend did the DB work, not the PWA)
+Both come back → <PageRenderer> wraps everything in <ThemeProvider tokens={config.theme.tokens}>
+renderer/theme-provider.tsx converts the theme's tokens into CSS custom properties (--color-primary, --radius-medium, etc.) injected via a <style> tag. Every component reads only these variables — never a hardcoded color.
+PageRenderer loops over page.sections and renders a SectionRenderer for each
+SectionRenderer looks up section.type (e.g. "news_grid") in the component-registry.tsx — a plain object mapping type → React component — and renders it, passing the section's variant, props, and pre-fetched items
+
+const componentRegistry = {
+  hero: Hero, news_card: NewsCard, news_grid: NewsGrid, carousel: Carousel, ...
+};
+Each component (e.g. NewsGrid) branches on section.variant for layout (two/three/four column) and renders section.items (the articles) — that's it, no fetching of its own.
+Where content comes from
+The backend, not the PWA, resolves data_source (e.g. {type: "latest", limit: 10}) into real CommonArticle documents before sending the page response. The PWA component just gets a ready-made items[] array.
+
+Routing
+Explicit folders for the seeded pages (/trending, /sports, etc.) plus /article/[slug] for individual articles
+A catch-all app/[slug]/page.tsx handles any other CMS page slug you create (like the "Story" page from earlier) — Next.js matches explicit folders first, falls through to this for everything else
+Every route uses fetch(..., { cache: "no-store" }), so nothing is baked in at build time — it's live on every request
+The one new piece from this session
+lib/api.ts reads the request's User-Agent header server-side and appends ?device=mobile|desktop to the config call, so the same page can render with a different theme depending on whether the visitor is on mobile or desktop — everything above stays identical, only which theme's tokens come back changes.

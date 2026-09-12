@@ -1,0 +1,60 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB_NAME: cms_pwa_platform
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-change-this-dev-secret}
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-shailendra@hook.online}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123}
+    ports:
+      - "8010:8010"
+
+  cms:
+    build:
+      context: .
+      dockerfile: apps/cms/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8010/api
+    ports:
+      - "3000:3000"
+
+  pwa:
+    build:
+      context: .
+      dockerfile: apps/pwa/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_PWA_API_BASE_URL: http://localhost:8010/api
+      NEXT_PUBLIC_PROPERTY_SLUG: hook
+    ports:
+      - "3001:3001"
+
+volumes:
+  mongo_data:
