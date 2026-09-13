@@ -12,13 +12,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api-client";
 import type { ArticleSummary, Page, Theme } from "@cms-pwa/shared-types";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [articles, setArticles] = useState<ArticleSummary[] | null>(null);
   const [pages, setPages] = useState<Page[] | null>(null);
   const [themes, setThemes] = useState<Theme[] | null>(null);
@@ -46,10 +49,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Overview of your content and configuration.</p>
-      </div>
+      <WelcomeBanner name={user?.name} />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {stats.map((s) => {

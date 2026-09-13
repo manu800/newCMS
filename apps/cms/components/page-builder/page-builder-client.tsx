@@ -181,7 +181,7 @@ export function PageBuilderClient({ id }: { id: string }) {
         title={`Page Builder — ${page.name}`}
         description={
           <span className="flex items-center gap-2">
-            <StatusBadge status={page.status} />
+            <StatusBadge status={page.status} onDark />
             <Link href="/pages" className="text-xs underline">
               Back to pages
             </Link>
@@ -210,8 +210,8 @@ export function PageBuilderClient({ id }: { id: string }) {
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveDragId(null)}
       >
-        <div className="grid flex-1 grid-cols-[220px_1fr_320px] gap-4">
-          <div className="rounded-lg border bg-card p-3">
+        <div className="relative z-10 grid flex-1 grid-cols-[220px_1fr_320px] gap-4">
+          <div className="rounded-lg border-0 bg-card shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] p-3">
             <Palette activeTypes={activeTypes} onAdd={addSection} />
           </div>
 
@@ -241,7 +241,7 @@ export function PageBuilderClient({ id }: { id: string }) {
             )}
           </div>
 
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-lg border-0 bg-card shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] p-4">
 
             {selectedSection ? (
               <PropertiesPanel
@@ -266,7 +266,7 @@ export function PageBuilderClient({ id }: { id: string }) {
               {draggingPaletteMeta.label}
             </div>
           ) : draggingSection ? (
-            <div className="rounded-lg border bg-card p-3 text-sm shadow-lg">
+            <div className="rounded-lg border-0 bg-card shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] p-3 text-sm shadow-lg">
               {draggingSection.title || draggingSection.type}
             </div>
           ) : null}

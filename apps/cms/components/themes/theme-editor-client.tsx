@@ -96,7 +96,7 @@ export function ThemeEditorClient({ id }: { id: string }) {
         title={theme.name}
         description={
           <span className="flex items-center gap-2">
-            <StatusBadge status={theme.status} />
+            <StatusBadge status={theme.status} onDark />
             <Link href="/themes" className="text-xs underline">
               Back to themes
             </Link>
@@ -112,18 +112,20 @@ export function ThemeEditorClient({ id }: { id: string }) {
         }
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Tabs defaultValue="colors">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="colors">Colors</TabsTrigger>
-            <TabsTrigger value="typography">Typography</TabsTrigger>
-            <TabsTrigger value="spacing">Spacing</TabsTrigger>
-            <TabsTrigger value="radius">Radius</TabsTrigger>
-            <TabsTrigger value="shadows">Shadows</TabsTrigger>
-            <TabsTrigger value="components">Components</TabsTrigger>
-            <TabsTrigger value="navigation">Navigation</TabsTrigger>
-          </TabsList>
+          <div className="mb-4 w-fit rounded-lg bg-card p-1.5 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)]">
+            <TabsList className="flex-wrap">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="colors">Colors</TabsTrigger>
+              <TabsTrigger value="typography">Typography</TabsTrigger>
+              <TabsTrigger value="spacing">Spacing</TabsTrigger>
+              <TabsTrigger value="radius">Radius</TabsTrigger>
+              <TabsTrigger value="shadows">Shadows</TabsTrigger>
+              <TabsTrigger value="components">Components</TabsTrigger>
+              <TabsTrigger value="navigation">Navigation</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="general" className="space-y-4">
             <Field label="Name">

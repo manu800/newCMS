@@ -41,7 +41,7 @@ export function Topbar() {
     .toUpperCase();
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-card px-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <header className="flex h-14 items-center justify-between bg-card px-5 shadow-[0_0.125rem_0.25rem_rgba(17,38,146,0.1)]">
       <div className="flex items-center gap-3">
         {properties.length > 0 && (
           <Select value={current?.id} onValueChange={setCurrentId}>

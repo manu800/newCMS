@@ -18,7 +18,9 @@ export function EditArticleClient({ id }: { id: string }) {
     return (
       <div>
         <PageHeader title="Edit Article" />
-        <Skeleton className="h-96 w-full" />
+        <div className="relative z-10">
+          <Skeleton className="h-96 w-full" />
+        </div>
       </div>
     );
   }
@@ -26,7 +28,9 @@ export function EditArticleClient({ id }: { id: string }) {
   return (
     <div>
       <PageHeader title="Edit Article" description={values.script_headline} />
-      <ArticleForm initial={values} />
+      <div className="relative z-10">
+        <ArticleForm initial={values} />
+      </div>
     </div>
   );
 }

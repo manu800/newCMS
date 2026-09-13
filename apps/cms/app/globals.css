@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -48,73 +48,75 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Hope UI-inspired palette (https://templates.iqonic.design/hope-ui) —
+   indigo-blue primary, soft "subtle" tints, light card-on-tinted-page look. */
 :root {
-  --background: #f6f7f9;
-  --foreground: #0f172a;
+  --background: #f5f6fa;
+  --foreground: #232d42;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #232d42;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #e11d48;
+  --popover-foreground: #232d42;
+  --primary: #3a57e8;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #ffe4e9;
-  --accent-foreground: #9f1239;
-  --destructive: #dc2626;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #e11d48;
-  --chart-1: #e11d48;
-  --chart-2: #fb7185;
-  --chart-3: #0f172a;
-  --chart-4: #64748b;
-  --chart-5: #94a3b8;
-  --radius: 0.75rem;
-  --sidebar: #0f172a;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #e11d48;
+  --secondary: #f8f9fa;
+  --secondary-foreground: #232d42;
+  --muted: #eef0f7;
+  --muted-foreground: #8a92a6;
+  --accent: #d8ddfa;
+  --accent-foreground: #17235d;
+  --destructive: #c03221;
+  --border: #e9ecef;
+  --input: #e9ecef;
+  --ring: #3a57e8;
+  --chart-1: #3a57e8;
+  --chart-2: #1aa053;
+  --chart-3: #079aa2;
+  --chart-4: #f16a1b;
+  --chart-5: #c03221;
+  --radius: 0.5rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #6c757d;
+  --sidebar-primary: #3a57e8;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #e11d48;
+  --sidebar-accent: #d8ddfa;
+  --sidebar-accent-foreground: #3a57e8;
+  --sidebar-border: #e9ecef;
+  --sidebar-ring: #3a57e8;
 }
 
 .dark {
-  --background: #0b0f1a;
-  --foreground: #e2e8f0;
-  --card: #111827;
-  --card-foreground: #e2e8f0;
-  --popover: #111827;
-  --popover-foreground: #e2e8f0;
-  --primary: #fb7185;
-  --primary-foreground: #0f172a;
-  --secondary: #1e293b;
-  --secondary-foreground: #e2e8f0;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #3f1725;
-  --accent-foreground: #fda4af;
-  --destructive: #f87171;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #fb7185;
-  --chart-1: #fb7185;
-  --chart-2: #e11d48;
-  --chart-3: #cbd5e1;
-  --chart-4: #94a3b8;
-  --chart-5: #64748b;
-  --sidebar: #0b0f1a;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #fb7185;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #fb7185;
+  --background: #151824;
+  --foreground: #cbd5e1;
+  --card: #1c2033;
+  --card-foreground: #cbd5e1;
+  --popover: #1c2033;
+  --popover-foreground: #cbd5e1;
+  --primary: #899af1;
+  --primary-foreground: #151824;
+  --secondary: #232838;
+  --secondary-foreground: #cbd5e1;
+  --muted: #232838;
+  --muted-foreground: #8a92a6;
+  --accent: rgba(137, 154, 241, 0.14);
+  --accent-foreground: #b8c2f6;
+  --destructive: #d9847a;
+  --border: #30384f;
+  --input: #30384f;
+  --ring: #899af1;
+  --chart-1: #899af1;
+  --chart-2: #76c698;
+  --chart-3: #6ac2c7;
+  --chart-4: #f7a676;
+  --chart-5: #d9847a;
+  --sidebar: #1c2033;
+  --sidebar-foreground: #8a92a6;
+  --sidebar-primary: #899af1;
+  --sidebar-primary-foreground: #151824;
+  --sidebar-accent: rgba(137, 154, 241, 0.12);
+  --sidebar-accent-foreground: #899af1;
+  --sidebar-border: #30384f;
+  --sidebar-ring: #899af1;
 }
 
 @layer base {
@@ -127,4 +129,25 @@
   html {
     @apply font-sans;
   }
+  /* Matches the reference Hope UI template's heading treatment: a medium
+     weight (not bold), tight line-height, and the dedicated heading color —
+     explicit Tailwind classes on individual headings still take precedence. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--foreground);
+  }
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.75rem; }
+  h4 { font-size: 1.5rem; }
+  h5 { font-size: 1.25rem; }
+  h6 { font-size: 1rem; }
+}
+
+/* Hope UI's signature indigo gradient banner background — shared by the
+   Dashboard welcome banner and every page's header. */
+.hopeui-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, #1f2f8f 100%);
 }

@@ -43,7 +43,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <div className="w-full max-w-sm rounded-xl border bg-card p-8 shadow-sm">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Hook CMS</h1>
+          <h1 className="text-2xl font-medium tracking-tight">Hook CMS</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to manage your properties</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

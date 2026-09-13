@@ -47,12 +47,12 @@ export function Sidebar() {
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
-      <div className="flex h-14 items-center gap-2.5 px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground shadow-[0_0_0_1px_rgba(255,255,255,0.08)]">
+      <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
           H
         </div>
         <div className="leading-tight">
-          <div className="text-sm font-semibold text-white">Hook CMS</div>
+          <div className="text-sm font-semibold text-sidebar-accent-foreground">Hook CMS</div>
           <div className="text-[11px] text-sidebar-foreground/60">Theme-driven platform</div>
         </div>
       </div>
@@ -60,9 +60,7 @@ export function Sidebar() {
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pt-2 pb-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            <div className="mb-1.5 px-3 text-[10px] font-semibold tracking-wider text-sidebar-foreground/40 uppercase">
-              {group.label}
-            </div>
+            <div className="mb-2 px-3 text-base font-medium text-foreground">{group.label}</div>
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -72,22 +70,18 @@ export function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "group flex items-center gap-3 rounded-md px-3 py-2 text-base font-normal transition-colors",
                       active
-                        ? "bg-sidebar-primary/15 text-white"
-                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-white"
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_10px_20px_-10px_rgba(58,87,232,0.5)]"
+                        : "text-sidebar-foreground hover:text-sidebar-primary"
                     )}
                   >
-                    <span
-                      className={cn(
-                        "absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-sidebar-primary transition-opacity",
-                        active ? "opacity-100" : "opacity-0"
-                      )}
-                    />
                     <Icon
                       className={cn(
                         "h-4 w-4 shrink-0",
-                        active ? "text-sidebar-primary" : "text-sidebar-foreground/50 group-hover:text-white"
+                        active
+                          ? "text-sidebar-primary-foreground"
+                          : "text-sidebar-foreground group-hover:text-sidebar-primary"
                       )}
                     />
                     {item.label}

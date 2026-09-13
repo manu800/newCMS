@@ -34,7 +34,7 @@ export function SectionCard({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       onClick={onSelect}
       className={cn(
-        "flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors",
+        "flex items-center gap-3 rounded-lg border-0 bg-card shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] p-3 transition-colors",
         selected ? "border-primary ring-1 ring-primary" : "hover:border-muted-foreground/40",
         isDragging && "opacity-50"
       )}

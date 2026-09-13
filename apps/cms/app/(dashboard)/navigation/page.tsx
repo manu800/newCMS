@@ -62,17 +62,20 @@ export default function NavigationPage() {
     <div>
       <PageHeader title="Navigation" description="Manage top, bottom, and sidebar navigation for the current property." />
 
+      <div className="relative z-10">
       {navs === null ? (
         <Skeleton className="h-64 w-full" />
       ) : (
         <Tabs defaultValue="top_navigation">
-          <TabsList>
-            {NAV_TYPES.map((t) => (
-              <TabsTrigger key={t.type} value={t.type}>
-                {t.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="mb-4 w-fit rounded-lg bg-card p-1.5 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)]">
+            <TabsList>
+              {NAV_TYPES.map((t) => (
+                <TabsTrigger key={t.type} value={t.type}>
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
           {NAV_TYPES.map((t) => {
             const nav = navs.find((n) => n.type === t.type);
             return (
@@ -108,6 +111,7 @@ export default function NavigationPage() {
           })}
         </Tabs>
       )}
+      </div>
     </div>
   );
 }

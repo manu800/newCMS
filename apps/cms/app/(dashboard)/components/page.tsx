@@ -45,7 +45,7 @@ export default function ComponentsPage() {
         description="Component types and their variants. Field schemas power the Page Builder's property panel."
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="relative z-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {components === null
           ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
           : components.map((c) => (

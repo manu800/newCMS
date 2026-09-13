@@ -49,11 +49,11 @@ export default function ArticlesPage() {
       {articles === null ? (
         <Skeleton className="h-96 w-full" />
       ) : articles.length === 0 ? (
-        <div className="rounded-lg border bg-card p-12 text-center text-sm text-muted-foreground">
+        <div className="relative z-10 rounded-lg border-0 bg-card shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] p-12 text-center text-sm text-muted-foreground">
           No articles yet. Create your first article.
         </div>
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="relative z-10 rounded-lg border-0 bg-card shadow-[0_10px_30px_0_rgba(17,38,146,0.05)]">
           <Table>
             <TableHeader>
               <TableRow>
