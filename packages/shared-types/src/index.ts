@@ -49,6 +49,7 @@ export interface ComponentField {
   required?: boolean;
   default?: unknown;
   options?: string[];
+  description?: string;
 }
 
 export interface ComponentVariant {

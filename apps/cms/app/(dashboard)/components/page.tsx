@@ -99,6 +99,7 @@ export default function ComponentsPage() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">name: {f.name}</p>
+                    {f.description && <p className="mt-1 text-xs text-muted-foreground">{f.description}</p>}
                   </div>
                 ))}
                 {selected?.fields.length === 0 && (

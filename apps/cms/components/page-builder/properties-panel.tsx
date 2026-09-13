@@ -191,7 +191,7 @@ export function PropertiesPanel({
           <h3 className="mb-3 text-sm font-semibold">Content</h3>
           <div className="space-y-3">
             {component.fields.map((field) => (
-              <Field key={field.name} label={field.label}>
+              <Field key={field.name} label={field.label} description={field.description}>
                 <DynamicField
                   type={field.type}
                   options={field.options}
@@ -683,11 +683,20 @@ export function PropertiesPanel({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       <Label className="text-xs capitalize">{label}</Label>
       {children}
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
     </div>
   );
 }
@@ -718,6 +727,59 @@ function DynamicField({
       return <Input type="date" value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
     case "datetime":
       return <Input type="datetime-local" value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
+    case "url":
+      return (
+        <Input
+          ref={inputRef}
+          type="url"
+          placeholder="https://example.com"
+          value={(value as string) ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
+    case "image":
+      return (
+        <div className="space-y-2">
+          <Input
+            ref={inputRef}
+            placeholder="https://example.com/image.jpg"
+            value={(value as string) ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {!!value && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={value as string}
+              alt="Preview"
+              className="h-20 w-full rounded-md border object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          )}
+        </div>
+      );
+    case "video":
+      return (
+        <div className="flex items-center gap-2">
+          <Input
+            ref={inputRef}
+            placeholder="https://example.com/video.mp4"
+            value={(value as string) ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          {!!value && (
+            <a
+              href={value as string}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 text-xs text-primary underline"
+            >
+              Preview
+            </a>
+          )}
+        </div>
+      );
     case "select":
       return (
         <Select value={value as string} onValueChange={onChange}>

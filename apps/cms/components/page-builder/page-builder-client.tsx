@@ -39,6 +39,10 @@ import { genId } from "@/lib/utils";
 import type { CmsComponent, Page, Section } from "@cms-pwa/shared-types";
 
 function emptySection(type: Section["type"], component: CmsComponent | undefined): Section {
+  const props: Record<string, unknown> = {};
+  for (const field of component?.fields ?? []) {
+    if (field.default !== undefined && field.default !== null) props[field.name] = field.default;
+  }
   return {
     id: genId("s"),
     type,
@@ -46,7 +50,7 @@ function emptySection(type: Section["type"], component: CmsComponent | undefined
     title: component?.name,
     data_source: undefined,
     config: { columns: { mobile: 1, tablet: 2, desktop: 3 }, spacing: { top: 20, bottom: 20 } },
-    props: {},
+    props,
   };
 }
 

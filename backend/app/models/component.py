@@ -49,6 +49,7 @@ class ComponentField(MongoBaseModel):
     required: bool = False
     default: Optional[object] = None
     options: list[str] = Field(default_factory=list)  # for select/multiselect
+    description: Optional[str] = None  # short help text shown under the field in the CMS
 
 
 class ComponentVariant(MongoBaseModel):

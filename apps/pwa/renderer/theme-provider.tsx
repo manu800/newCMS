@@ -83,6 +83,7 @@ export function ThemeProvider({
           backgroundColor: "var(--color-background)",
           color: "var(--color-text)",
           fontFamily: "var(--font-family)",
+          fontWeight: "var(--font-body-weight)",
           minHeight: "100vh",
         }}
       >

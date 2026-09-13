@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { ThemePreview } from "@/components/themes/theme-preview";
+import { LiveThemePreview, PwaTargetSelect, usePwaTarget } from "@/components/themes/live-theme-preview";
 import { VersionHistoryDialog } from "@/components/versions/version-history-dialog";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -31,6 +31,7 @@ export function ThemeEditorClient({ id }: { id: string }) {
   const [theme, setTheme] = useState<Theme | null>(null);
   const [components, setComponents] = useState<CmsComponent[]>([]);
   const [saving, setSaving] = useState(false);
+  const pwaTarget = usePwaTarget();
 
   const load = () => {
     api.get<Theme>(`/themes/${id}`).then(setTheme).catch(() => setTheme(null));
@@ -271,13 +272,16 @@ export function ThemeEditorClient({ id }: { id: string }) {
         </Tabs>
 
         <div>
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between gap-3">
             <h3 className="text-sm font-medium text-muted-foreground">Live Preview</h3>
-            {theme.device_type && (
-              <Badge variant="outline" className="capitalize">
-                {theme.device_type} viewport
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              <PwaTargetSelect {...pwaTarget} />
+              {theme.device_type && (
+                <Badge variant="outline" className="capitalize">
+                  {theme.device_type} viewport
+                </Badge>
+              )}
+            </div>
           </div>
           <div className={theme.device_type === "mobile" ? "flex justify-center" : undefined}>
             <div
@@ -287,7 +291,11 @@ export function ThemeEditorClient({ id }: { id: string }) {
                   : "w-full"
               }
             >
-              <ThemePreview tokens={theme.design_tokens} componentMapping={theme.component_mapping} />
+              <LiveThemePreview
+                tokens={theme.design_tokens}
+                deviceType={theme.device_type}
+                baseUrl={pwaTarget.baseUrl}
+              />
             </div>
           </div>
         </div>
