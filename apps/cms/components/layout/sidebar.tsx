@@ -3,12 +3,16 @@
 import {
   LayoutDashboard,
   Newspaper,
+  Tag,
+  Tags,
+  Images,
   Palette,
   Blocks,
   FileStack,
   Compass,
   Building2,
   MonitorSmartphone,
+  LayoutList,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,7 +26,13 @@ const NAV_GROUPS = [
   },
   {
     label: "Content",
-    items: [{ href: "/articles", label: "Articles", icon: Newspaper }],
+    items: [
+      { href: "/articles", label: "Articles", icon: Newspaper },
+      { href: "/categories", label: "Categories", icon: Tag },
+      { href: "/tags", label: "Tags", icon: Tags },
+      { href: "/media-library", label: "Media Library", icon: Images },
+      { href: "/content-models", label: "Content Models", icon: LayoutList },
+    ],
   },
   {
     label: "Design",

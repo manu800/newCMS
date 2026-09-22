@@ -1,10 +1,15 @@
+import secrets
+
 from fastapi import HTTPException, status
 
+from app.core.cache import cache_get, cache_set
 from app.repositories.navigation_repo import navigation_repo
 from app.repositories.page_repo import page_repo
 from app.repositories.property_repo import property_repo
 from app.repositories.theme_repo import theme_repo
 from app.services.page_service import resolve_sections
+
+ARTICLE_DRAFT_TTL_SECONDS = 600
 
 
 async def get_property_or_404(property_slug: str) -> dict:
@@ -111,6 +116,40 @@ async def build_pwa_preview(page_id: str, device: str = "desktop") -> dict:
             "published_at": page.get("published_at"),
         },
         "sections": resolved_sections,
+    }
+
+
+async def create_article_draft(property_id: str, data: dict) -> str:
+    """Stashes an unsaved article form's current values under a short-lived
+    token so the CMS can preview it in the real PWA theme before saving —
+    articles have no draft/published split like Pages do, so there's nothing
+    in the DB yet to preview by id."""
+    token = secrets.token_urlsafe(24)
+    await cache_set(f"article_draft:{token}", {"property_id": property_id, "data": data}, ttl=ARTICLE_DRAFT_TTL_SECONDS)
+    return token
+
+
+async def build_article_draft_preview(token: str, device: str = "desktop") -> dict:
+    draft = await cache_get(f"article_draft:{token}")
+    if not draft:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Preview expired or not found — try previewing again")
+
+    prop = await property_repo.get(draft["property_id"])
+    if not prop:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Property not found")
+
+    theme_out, navigation_out = await _build_theme_and_nav(prop, device)
+
+    return {
+        "property": {
+            "name": prop["name"],
+            "slug": prop["slug"],
+            "logo": prop.get("logo"),
+            "host": prop.get("host"),
+        },
+        "theme": theme_out,
+        "navigation": navigation_out,
+        "article": draft["data"],
     }
 
 

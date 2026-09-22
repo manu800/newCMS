@@ -26,4 +26,9 @@ COLLECTIONS = {
     "articles": "common_articles",
     "versions": "versions",
     "pwa_targets": "pwa_targets",
+    "categories": "categories",
+    "assets": "assets",
+    "tags": "tags",
+    "content_models": "content_models",
+    "content_items": "content_items",
 }

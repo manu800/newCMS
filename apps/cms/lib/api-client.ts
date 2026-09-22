@@ -43,4 +43,23 @@ export const api = {
   put: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  // FormData upload — no Content-Type header, so the browser sets the correct
+  // multipart boundary itself (setting it manually breaks multipart parsing).
+  upload: <T>(path: string, formData: FormData) => {
+    const token = Cookies.get(AUTH_COOKIE);
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return fetch(`${API_BASE_URL}${path}`, { method: "POST", body: formData, headers }).then(async (res) => {
+      if (!res.ok) {
+        let detail = res.statusText;
+        try {
+          detail = (await res.json()).detail || detail;
+        } catch {
+          // ignore
+        }
+        throw new ApiError(detail, res.status);
+      }
+      return res.json() as Promise<T>;
+    });
+  },
 };

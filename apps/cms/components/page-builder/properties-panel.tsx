@@ -14,9 +14,9 @@ import type {
   StructureElement,
 } from "@cms-pwa/shared-types";
 
+import { DynamicField, Field } from "@/components/shared/dynamic-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -683,127 +683,3 @@ export function PropertiesPanel({
   );
 }
 
-function Field({
-  label,
-  description,
-  children,
-}: {
-  label: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs capitalize">{label}</Label>
-      {children}
-      {description && <p className="text-xs text-muted-foreground">{description}</p>}
-    </div>
-  );
-}
-
-function DynamicField({
-  type,
-  options,
-  value,
-  onChange,
-  inputRef,
-}: {
-  type: string;
-  options?: string[];
-  value: unknown;
-  onChange: (v: unknown) => void;
-  inputRef?: React.RefObject<HTMLInputElement | null>;
-}) {
-  switch (type) {
-    case "textarea":
-      return <Textarea value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
-    case "number":
-      return <Input type="number" value={(value as number) ?? ""} onChange={(e) => onChange(Number(e.target.value))} />;
-    case "boolean":
-      return <Switch checked={!!value} onCheckedChange={onChange} />;
-    case "color":
-      return <Input type="color" value={(value as string) ?? "#000000"} onChange={(e) => onChange(e.target.value)} />;
-    case "date":
-      return <Input type="date" value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
-    case "datetime":
-      return <Input type="datetime-local" value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
-    case "url":
-      return (
-        <Input
-          ref={inputRef}
-          type="url"
-          placeholder="https://example.com"
-          value={(value as string) ?? ""}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      );
-    case "image":
-      return (
-        <div className="space-y-2">
-          <Input
-            ref={inputRef}
-            placeholder="https://example.com/image.jpg"
-            value={(value as string) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-          />
-          {!!value && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={value as string}
-              alt="Preview"
-              className="h-20 w-full rounded-md border object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          )}
-        </div>
-      );
-    case "video":
-      return (
-        <div className="flex items-center gap-2">
-          <Input
-            ref={inputRef}
-            placeholder="https://example.com/video.mp4"
-            value={(value as string) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
-          />
-          {!!value && (
-            <a
-              href={value as string}
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0 text-xs text-primary underline"
-            >
-              Preview
-            </a>
-          )}
-        </div>
-      );
-    case "select":
-      return (
-        <Select value={value as string} onValueChange={onChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options ?? []).map((o) => (
-              <SelectItem key={o} value={o}>
-                {o}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    case "multiselect":
-      return (
-        <Input
-          value={Array.isArray(value) ? value.join(", ") : ""}
-          placeholder="comma, separated, values"
-          onChange={(e) => onChange(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
-        />
-      );
-    default:
-      return <Input ref={inputRef} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
-  }
-}

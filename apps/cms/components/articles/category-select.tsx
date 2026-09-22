@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   Select,
   SelectContent,
@@ -7,15 +9,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProperty } from "@/hooks/use-property";
+import { api } from "@/lib/api-client";
+import type { Category } from "@cms-pwa/shared-types";
 
-export const CATEGORIES = [
-  { name: "Politics", slug: "politics" },
-  { name: "Sports", slug: "sports" },
-  { name: "Entertainment", slug: "entertainment" },
-  { name: "Technology", slug: "technology" },
-  { name: "Lifestyle", slug: "lifestyle" },
-  { name: "Videos", slug: "videos" },
-];
+function useCategories() {
+  const { current } = useProperty();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    if (!current) return;
+    api.get<Category[]>(`/categories?property_id=${current.id}`).then(setCategories).catch(() => setCategories([]));
+  }, [current]);
+
+  return categories;
+}
 
 export function CategorySelect({
   value,
@@ -24,19 +32,60 @@ export function CategorySelect({
   value?: string;
   onChange: (category: { name: string; slug: string }) => void;
 }) {
+  const categories = useCategories();
+  const parents = categories.filter((c) => !c.parent_id);
+
   return (
     <Select
       value={value}
       onValueChange={(slug: string) => {
-        const cat = CATEGORIES.find((c) => c.slug === slug);
-        if (cat) onChange(cat);
+        const cat = parents.find((c) => c.slug === slug);
+        if (cat) onChange({ name: cat.name, slug: cat.slug });
       }}
     >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select category" />
+        <SelectValue placeholder={parents.length === 0 ? "No categories yet" : "Select category"} />
       </SelectTrigger>
       <SelectContent>
-        {CATEGORIES.map((c) => (
+        {parents.map((c) => (
+          <SelectItem key={c.slug} value={c.slug}>
+            {c.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+export function SubcategorySelect({
+  parentSlug,
+  value,
+  onChange,
+}: {
+  parentSlug?: string;
+  value?: string;
+  onChange: (category: { name: string; slug: string }) => void;
+}) {
+  const categories = useCategories();
+  const parent = categories.find((c) => c.slug === parentSlug && !c.parent_id);
+  const children = parent ? categories.filter((c) => c.parent_id === parent.id) : [];
+
+  return (
+    <Select
+      value={value}
+      onValueChange={(slug: string) => {
+        const cat = children.find((c) => c.slug === slug);
+        if (cat) onChange({ name: cat.name, slug: cat.slug });
+      }}
+      disabled={!parent || children.length === 0}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue
+          placeholder={!parent ? "Select a category first" : children.length === 0 ? "No subcategories" : "Select subcategory"}
+        />
+      </SelectTrigger>
+      <SelectContent>
+        {children.map((c) => (
           <SelectItem key={c.slug} value={c.slug}>
             {c.name}
           </SelectItem>

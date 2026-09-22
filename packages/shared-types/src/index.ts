@@ -7,6 +7,7 @@ export type FieldType =
   | "multiselect"
   | "image"
   | "video"
+  | "audio"
   | "url"
   | "color"
   | "article"
@@ -229,6 +230,84 @@ export interface PwaTarget {
   notes?: string;
   is_default: boolean;
   status?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  property_id: string;
+  parent_id?: string | null;
+  order: number;
+  item_count?: number;
+  thumbnail?: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_tags?: string[];
+  look_book_summary?: string;
+}
+
+export interface Asset {
+  id: string;
+  name: string;
+  filename: string;
+  storage: "local" | "s3";
+  url: string;
+  type: "image" | "video" | "audio";
+  mime_type: string;
+  size: number;
+  tags: string[];
+  alt_text?: string;
+  caption?: string;
+  credit?: string;
+  folder: string;
+  property_id: string;
+  created_at?: string;
+}
+
+export interface AssetUsageItem {
+  type: "article" | "category";
+  name: string;
+}
+
+export interface AssetUsage {
+  count: number;
+  items: AssetUsageItem[];
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  property_id: string;
+}
+
+export interface ContentModelField {
+  key: string;
+  label: string;
+  type: FieldType;
+  tab: string;
+  required: boolean;
+  visible: boolean;
+  order: number;
+  options?: string[];
+  help_text?: string;
+}
+
+export interface ContentModel {
+  id: string;
+  name: string;
+  content_type: string;
+  property_id: string;
+  fields: ContentModelField[];
+}
+
+export interface ContentItem {
+  id: string;
+  content_type: string;
+  property_id: string;
+  data: Record<string, unknown>;
+  created_at?: string;
 }
 
 export interface DataSource {
