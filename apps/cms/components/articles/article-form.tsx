@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProperty } from "@/hooks/use-property";
 import { api, ApiError } from "@/lib/api-client";
+import { toArticlePreviewData } from "@/lib/content-preview";
 import { cn } from "@/lib/utils";
 import type { ContentModel, ContentModelField } from "@cms-pwa/shared-types";
 
@@ -70,9 +71,12 @@ const TAB_LABELS: Record<string, string> = {
 function isFullWidth(field: ContentModelField) {
   return (
     field.type === "textarea" ||
+    field.type === "richtext" ||
     field.type === "image" ||
     field.type === "video" ||
     field.type === "audio" ||
+    field.type === "cards" ||
+    field.type === "suggestion_links" ||
     field.key === "tags" ||
     field.key === "script_content"
   );
@@ -91,12 +95,22 @@ function shouldRender(field: ContentModelField, values: ArticleFormValues) {
 
 export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
   const { current } = useProperty();
-  const [values, setValues] = useState<ArticleFormValues>({ ...DEFAULTS, ...initial });
+  // A "New {model}" link elsewhere (e.g. the Video content list) can send
+  // ?type=video to land here with that Article Type preselected instead of
+  // opening a separate create dialog — `initial` (editing an existing
+  // article) always wins over the query param.
+  const typeParam = useSearchParams().get("type");
+  const [values, setValues] = useState<ArticleFormValues>({
+    ...DEFAULTS,
+    ...(typeParam ? { article_type: typeParam } : {}),
+    ...initial,
+  });
   const [model, setModel] = useState<ContentModel | null>(null);
   const [altModel, setAltModel] = useState<ContentModel | null>(null);
   const [altData, setAltData] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [modelTypes, setModelTypes] = useState<string[]>(["article"]);
   const router = useRouter();
   const isEditing = !!initial?.id;
 
@@ -106,6 +120,20 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
       .get<ContentModel>(`/content-models/active?property_id=${current.id}&content_type=article`)
       .then(setModel)
       .catch(() => toast.error("Failed to load form fields"));
+  }, [current?.id]);
+
+  // Article Type's options mirror whatever Content Models exist for this
+  // property right now, rather than a fixed list on the field itself — so a
+  // newly created model (e.g. "Quiz") shows up here immediately.
+  useEffect(() => {
+    if (!current) return;
+    api
+      .get<ContentModel[]>(`/content-models?property_id=${current.id}`)
+      .then((list) => {
+        const types = list.map((m) => m.content_type);
+        setModelTypes(["article", ...types.filter((t) => t !== "article")]);
+      })
+      .catch(() => setModelTypes(["article"]));
   }, [current?.id]);
 
   // Only a brand-new article can switch content type — an existing article
@@ -184,7 +212,10 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
         await api.put(`/articles/${values.id}`, payload);
         toast.success("Article updated");
       } else {
-        await api.post("/articles", payload);
+        // property_id only applies to a brand-new article — new articles are
+        // stored as a Content Item, which is always property-scoped; existing
+        // (legacy) articles have no such field, so it's never sent on update.
+        await api.post("/articles", { ...payload, property_id: current?.id });
         toast.success("Article created");
       }
       router.push("/articles");
@@ -207,6 +238,9 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
 
   const visibleFields = model.fields.filter((f) => f.visible).sort((a, b) => a.order - b.order);
   const tabs = Array.from(new Set(visibleFields.map((f) => f.tab)));
+  // Article's own catalog already has a dedicated Video Orientation field —
+  // skip auto-managing the same value inline so it isn't shown twice.
+  const hasOwnOrientationField = model.fields.some((f) => f.key === "video_orientation");
 
   const renderField = (field: ContentModelField) => {
     const full = isFullWidth(field);
@@ -268,16 +302,24 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
       >
         <DynamicField
           type={field.type}
-          options={field.options}
+          options={field.key === "article_type" ? modelTypes : field.options}
           value={values[field.key as keyof ArticleFormValues]}
           onChange={(v) => setDynamic(field.key, v)}
           disabled={field.key === "article_type" && isEditing}
+          orientationValue={
+            field.type === "video" && !hasOwnOrientationField ? (values.video_orientation as string | undefined) : undefined
+          }
+          onOrientationChange={
+            field.type === "video" && !hasOwnOrientationField ? (v: string) => setDynamic("video_orientation", v) : undefined
+          }
+          suggestedName={values.script_headline}
         />
       </Field>
     );
   };
 
   const articleTypeField = model.fields.find((f) => f.key === "article_type");
+  const altHasOwnOrientationField = (altModel?.fields ?? []).some((f) => f.key === "video_orientation");
 
   const renderAltField = (field: ContentModelField) => {
     if (field.type === "boolean") {
@@ -297,30 +339,55 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
         label={field.label}
         description={field.help_text}
         required={field.required}
-        full={field.type === "textarea" || field.type === "image" || field.type === "video" || field.type === "audio"}
+        full={isFullWidth(field)}
       >
         <DynamicField
           type={field.type}
           options={field.options}
           value={altData[field.key]}
           onChange={(v) => setAlt(field.key, v)}
+          orientationValue={
+            field.type === "video" && !altHasOwnOrientationField
+              ? (altData.video_orientation as string | undefined)
+              : undefined
+          }
+          onOrientationChange={
+            field.type === "video" && !altHasOwnOrientationField ? (v: string) => setAlt("video_orientation", v) : undefined
+          }
+          suggestedName={(altData.script_headline as string | undefined) ?? values.script_headline}
         />
       </Field>
     );
   };
 
+  const altVisibleFields = (altModel?.fields ?? []).filter((f) => f.visible).sort((a, b) => a.order - b.order);
+  const altTabs = Array.from(new Set(altVisibleFields.map((f) => f.tab)));
+
   return (
     <div className="space-y-6">
       {altModel ? (
-        <div className="rounded-xl border bg-card p-5 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] sm:p-6">
-          <div className="grid grid-cols-1 gap-x-5 gap-y-5 sm:grid-cols-2">
-            {articleTypeField && renderField(articleTypeField)}
-            {altModel.fields
-              .filter((f) => f.visible)
-              .sort((a, b) => a.order - b.order)
-              .map(renderAltField)}
+        <Tabs defaultValue={altTabs[0] ?? "content"}>
+          <div className="mb-4 w-fit rounded-lg bg-card p-1.5 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)]">
+            <TabsList className="flex-wrap">
+              {altTabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab}>
+                  {TAB_LABELS[tab] ?? tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </div>
-        </div>
+
+          {altTabs.map((tab, i) => (
+            <TabsContent key={tab} value={tab}>
+              <div className="rounded-xl border bg-card p-5 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)] sm:p-6">
+                <div className="grid grid-cols-1 gap-x-5 gap-y-5 sm:grid-cols-2">
+                  {i === 0 && articleTypeField && renderField(articleTypeField)}
+                  {altVisibleFields.filter((f) => f.tab === tab).map(renderAltField)}
+                </div>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
       ) : (
         <Tabs defaultValue={tabs[0] ?? "content"}>
           <div className="mb-4 w-fit rounded-lg bg-card p-1.5 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)]">
@@ -348,11 +415,9 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
       )}
 
       <div className="flex justify-end gap-2 border-t pt-4">
-        {!altModel && (
-          <Button variant="outline" onClick={() => setPreviewOpen(true)} disabled={!current}>
-            Preview
-          </Button>
-        )}
+        <Button variant="outline" onClick={() => setPreviewOpen(true)} disabled={!current}>
+          Preview
+        </Button>
         <Button
           variant="outline"
           onClick={() => router.push(altModel ? `/content/${altModel.content_type}` : "/articles")}
@@ -364,10 +429,10 @@ export function ArticleForm({ initial }: { initial?: ArticleFormValues }) {
         </Button>
       </div>
 
-      {current && !altModel && (
+      {current && (
         <ArticlePreviewDialog
           propertyId={current.id}
-          data={values as Record<string, unknown>}
+          data={altModel ? toArticlePreviewData(values as Record<string, unknown>) : (values as Record<string, unknown>)}
           open={previewOpen}
           onOpenChange={setPreviewOpen}
         />

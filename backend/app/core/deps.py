@@ -23,6 +23,8 @@ async def get_current_user(
     user = await db[COLLECTIONS["users"]].find_one({"email": payload.get("sub")})
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    if user.get("is_active") is False:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "This account has been disabled")
     return doc_out(user)
 
 

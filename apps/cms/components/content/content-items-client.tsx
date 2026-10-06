@@ -1,19 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { DynamicField } from "@/components/shared/dynamic-field";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -24,8 +16,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useProperty } from "@/hooks/use-property";
-import { api, ApiError } from "@/lib/api-client";
-import type { ContentItem, ContentModel, ContentModelField } from "@cms-pwa/shared-types";
+import { api } from "@/lib/api-client";
+import type { ContentItem, ContentModel } from "@cms-pwa/shared-types";
 
 function displayValue(v: unknown): string {
   if (v == null || v === "") return "—";
@@ -42,9 +34,6 @@ export function ContentItemsClient({ contentType }: { contentType: string }) {
   const { current } = useProperty();
   const [model, setModel] = useState<ContentModel | null>(null);
   const [items, setItems] = useState<ContentItem[] | null>(null);
-  const [dialog, setDialog] = useState<{ mode: "create" | "edit"; item?: ContentItem } | null>(null);
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
-  const [saving, setSaving] = useState(false);
 
   const load = () => {
     if (!current) return;
@@ -65,42 +54,6 @@ export function ContentItemsClient({ contentType }: { contentType: string }) {
 
   const visibleFields = (model?.fields ?? []).filter((f) => f.visible).sort((a, b) => a.order - b.order);
   const columns = visibleFields.slice(0, 3);
-  const tabs = Array.from(new Set(visibleFields.map((f) => f.tab)));
-
-  const openCreate = () => {
-    setFormData({});
-    setDialog({ mode: "create" });
-  };
-
-  const openEdit = (item: ContentItem) => {
-    setFormData({ ...item.data });
-    setDialog({ mode: "edit", item });
-  };
-
-  const submit = async () => {
-    if (!current) return;
-    const missing = visibleFields.find((f) => f.required && !formData[f.key]);
-    if (missing) {
-      toast.error(`${missing.label} is required`);
-      return;
-    }
-    setSaving(true);
-    try {
-      if (dialog?.mode === "edit" && dialog.item) {
-        await api.put(`/content-items/${dialog.item.id}`, { data: formData });
-        toast.success("Item updated");
-      } else {
-        await api.post("/content-items", { content_type: contentType, property_id: current.id, data: formData });
-        toast.success("Item created");
-      }
-      setDialog(null);
-      load();
-    } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Failed to save item");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const remove = async (item: ContentItem) => {
     if (!confirm("Delete this item? This can't be undone.")) return;
@@ -113,27 +66,14 @@ export function ContentItemsClient({ contentType }: { contentType: string }) {
     }
   };
 
-  const renderField = (field: ContentModelField) => (
-    <div key={field.key} className="space-y-2">
-      <Label>{field.label}</Label>
-      <DynamicField
-        type={field.type}
-        options={field.options}
-        value={formData[field.key]}
-        onChange={(v) => setFormData((d) => ({ ...d, [field.key]: v }))}
-      />
-      {field.help_text && <p className="text-xs text-muted-foreground">{field.help_text}</p>}
-    </div>
-  );
-
   return (
     <div>
       <PageHeader
         title={model?.name ?? contentType}
         description={`Manage ${model?.name ?? contentType} items for this property.`}
         actions={
-          <Button onClick={openCreate} disabled={!model || visibleFields.length === 0}>
-            + New {model?.name ?? "item"}
+          <Button asChild disabled={!model || visibleFields.length === 0}>
+            <Link href={`/articles/new?type=${contentType}`}>+ New {model?.name ?? "item"}</Link>
           </Button>
         }
       />
@@ -173,8 +113,8 @@ export function ContentItemsClient({ contentType }: { contentType: string }) {
                       <TableCell key={c.key}>{displayValue(item.data[c.key])}</TableCell>
                     ))}
                     <TableCell className="space-x-2 text-right">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(item)}>
-                        Edit
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/content/${contentType}/${item.id}/edit`}>Edit</Link>
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => remove(item)}>
                         Delete
@@ -187,30 +127,6 @@ export function ContentItemsClient({ contentType }: { contentType: string }) {
           </Table>
         )}
       </div>
-
-      <Dialog open={!!dialog} onOpenChange={(open: boolean) => !open && setDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{dialog?.mode === "edit" ? `Edit ${model?.name}` : `New ${model?.name}`}</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[65vh] space-y-6 overflow-y-auto pr-1">
-            {tabs.map((tab) => (
-              <div key={tab} className="space-y-4">
-                {tabs.length > 1 && <h4 className="text-xs font-semibold uppercase text-muted-foreground">{tab}</h4>}
-                {visibleFields.filter((f) => f.tab === tab).map(renderField)}
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialog(null)}>
-              Cancel
-            </Button>
-            <Button onClick={submit} disabled={saving}>
-              {saving ? "Saving..." : dialog?.mode === "edit" ? "Save" : "Create"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -289,7 +289,7 @@ export function ThemeEditorClient({ id }: { id: string }) {
             <div
               className={
                 theme.device_type === "mobile"
-                  ? "w-[375px] overflow-hidden rounded-[2rem] border-4 border-neutral-800 shadow-lg"
+                  ? "w-[430px] overflow-hidden rounded-[2rem] border-4 border-neutral-800 shadow-lg"
                   : "w-full"
               }
             >

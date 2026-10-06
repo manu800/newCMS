@@ -13,6 +13,8 @@ async def login(body: LoginRequest):
     user = await user_repo.get_by_email(body.email)
     if not user or not verify_password(body.password, user["password_hash"]):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
+    if user.get("is_active") is False:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "This account has been disabled")
 
     token = create_access_token(subject=user["email"], role=user["role"])
     user.pop("password_hash", None)

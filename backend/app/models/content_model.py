@@ -28,5 +28,6 @@ class ContentModel(MongoBaseModel):
     content_type: str
     property_id: str
     fields: list[ContentModelField] = Field(default_factory=list)
+    show_in_sidebar: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

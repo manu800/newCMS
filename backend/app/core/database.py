@@ -31,4 +31,5 @@ COLLECTIONS = {
     "tags": "tags",
     "content_models": "content_models",
     "content_items": "content_items",
+    "settings": "settings",
 }

@@ -12,6 +12,14 @@ async def list_content_items(property_id: str, content_type: str, user: dict = D
     return await content_item_repo.list_for_property_and_type(property_id, content_type)
 
 
+@router.get("/{item_id}")
+async def get_content_item(item_id: str, user: dict = Depends(get_current_user)):
+    item = await content_item_repo.get(item_id)
+    if not item:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Content item not found")
+    return item
+
+
 @router.post("", dependencies=[Depends(require_role("editor"))])
 async def create_content_item(body: ContentItemCreate):
     if body.content_type == "article":

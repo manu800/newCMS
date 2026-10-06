@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, FileAudio, Film, ImageIcon, Trash2, Upload } from "lucide-react";
+import { Check, Copy, Music, Play, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -23,8 +23,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProperty } from "@/hooks/use-property";
 import { api } from "@/lib/api-client";
 import type { Asset, AssetUsage } from "@cms-pwa/shared-types";
-
-const TYPE_ICON = { image: ImageIcon, video: Film, audio: FileAudio } as const;
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -255,11 +253,16 @@ export default function MediaLibraryPage() {
                 <img
                   src={editing.url}
                   alt={editing.name}
-                  className="h-56 w-full rounded-md border object-cover"
+                  className="h-56 w-full rounded-md border bg-muted object-contain"
                 />
+              ) : editing.type === "video" ? (
+                <video src={editing.url} controls className="h-56 w-full rounded-md border bg-black object-contain" />
               ) : (
-                <div className="flex h-32 items-center justify-center rounded-md border bg-muted text-sm text-muted-foreground">
-                  {editing.type} · {formatSize(editing.size)}
+                <div className="flex h-24 items-center gap-3 rounded-md border bg-gradient-to-br from-primary/10 to-primary/5 p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                    <Music className="h-5 w-5" />
+                  </span>
+                  <audio src={editing.url} controls className="h-10 w-full" />
                 </div>
               )}
 
@@ -330,7 +333,6 @@ export default function MediaLibraryPage() {
 
 function AssetCard({ asset, onOpen }: { asset: Asset; onOpen: () => void }) {
   const [copied, setCopied] = useState(false);
-  const Icon = TYPE_ICON[asset.type];
 
   const copyUrl = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -355,14 +357,28 @@ function AssetCard({ asset, onOpen }: { asset: Asset; onOpen: () => void }) {
             onOpen();
           }
         }}
-        className="relative flex h-28 w-full cursor-pointer items-center justify-center bg-muted"
+        className="relative flex h-28 w-full cursor-pointer items-center justify-center overflow-hidden bg-muted"
         title="Click to view details"
       >
         {asset.type === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={asset.url} alt={asset.name} className="h-full w-full object-cover" />
+        ) : asset.type === "video" ? (
+          <>
+            <video src={asset.url} preload="metadata" muted className="h-full w-full object-cover" />
+            <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors group-hover:bg-black/20">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+                <Play className="h-4 w-4 translate-x-0.5 fill-current" />
+              </span>
+            </span>
+          </>
         ) : (
-          <Icon className="h-8 w-8 text-muted-foreground" />
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-primary/10 to-primary/5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Music className="h-4 w-4" />
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Audio</span>
+          </div>
         )}
         <button
           type="button"

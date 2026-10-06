@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { DATA_SOURCE_LABELS, STRUCTURE_ELEMENTS } from "@cms-pwa/component-schema";
 import type {
   CmsComponent,
+  ContentModel,
   DataSource,
   DataSourceType,
   DesignContract,
@@ -14,6 +15,7 @@ import type {
   StructureElement,
 } from "@cms-pwa/shared-types";
 
+import { CategoryMultiSelect } from "@/components/shared/category-multi-select";
 import { DynamicField, Field } from "@/components/shared/dynamic-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,19 +29,75 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useProperty } from "@/hooks/use-property";
+import { api } from "@/lib/api-client";
 
 
 
-const DATA_SOURCE_TYPES: DataSourceType[] = [
+// "video" used to be a fixed built-in type (matching a legacy article_type
+// field on Article-shaped docs); real Video items now live under their own
+// Content Model, so every custom content type — including Video — is
+// appended dynamically below instead.
+const BASE_DATA_SOURCE_TYPES: DataSourceType[] = [
   "latest",
   "trending",
   "breaking",
   "category",
   "tag",
   "manual",
-  "video",
   "search",
+  "authors",
 ];
+
+/** Every custom Content Model this property has (excluding "article", which
+ * already gets its own fixed source types above) — each one becomes a
+ * selectable Source Type, so a section can pull Video/Quiz/etc. items
+ * directly by their own content_type. */
+function useContentModelSourceTypes() {
+  const { current } = useProperty();
+  const [models, setModels] = useState<{ content_type: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!current) return;
+    api
+      .get<ContentModel[]>(`/content-models?property_id=${current.id}`)
+      .then((list) =>
+        setModels(
+          list.filter((m) => m.content_type !== "article").map((m) => ({ content_type: m.content_type, name: m.name }))
+        )
+      )
+      .catch(() => setModels([]));
+  }, [current?.id]);
+
+  return models;
+}
+
+/** The admin-curated set of Source Types allowed in the picker (Content
+ * Models → Source types) — null while loading, empty Set means unconfigured
+ * (everything allowed), same "empty means default" convention used by the
+ * sidebar order setting. */
+interface CustomSourceType {
+  key: string;
+  label: string;
+  field?: string;
+}
+
+function useEnabledSourceTypes() {
+  const [enabled, setEnabled] = useState<Set<string> | null>(null);
+  const [customTypes, setCustomTypes] = useState<CustomSourceType[]>([]);
+
+  useEffect(() => {
+    api
+      .get<{ enabled: string[]; custom: CustomSourceType[] }>("/settings/source-types")
+      .then(({ enabled: list, custom }) => {
+        setEnabled(new Set(list));
+        setCustomTypes(custom ?? []);
+      })
+      .catch(() => setEnabled(new Set()));
+  }, []);
+
+  return { enabled, customTypes };
+}
 
 export function PropertiesPanel({
   section,
@@ -51,9 +109,41 @@ export function PropertiesPanel({
   onChange: (patch: Partial<Section>) => void;
 }) {
   const dataSource: DataSource = section.data_source ?? { type: "manual", limit: 10 };
+  const customSourceModels = useContentModelSourceTypes();
+  const { enabled: enabledSourceTypes, customTypes } = useEnabledSourceTypes();
+  const allDataSourceTypes: DataSourceType[] = [
+    ...BASE_DATA_SOURCE_TYPES,
+    ...customSourceModels.map((m) => m.content_type),
+    ...customTypes.map((c) => c.key),
+  ];
+  // Unconfigured (empty set, or still loading) means everything's allowed;
+  // the section's already-saved type always stays selectable even if it was
+  // since disabled, so an existing page doesn't silently break.
+  const dataSourceTypes: DataSourceType[] =
+    !enabledSourceTypes || enabledSourceTypes.size === 0
+      ? allDataSourceTypes
+      : allDataSourceTypes.filter((t) => enabledSourceTypes.has(t) || t === dataSource.type);
+  const dataSourceLabel = (t: string) =>
+    DATA_SOURCE_LABELS[t] ??
+    customSourceModels.find((m) => m.content_type === t)?.name ??
+    customTypes.find((c) => c.key === t)?.label ??
+    t;
 
   const updateDataSource = (patch: Partial<DataSource>) =>
     onChange({ data_source: { ...dataSource, ...patch } });
+
+  // Self-heals a field-bound custom Source Type whose `field` never got
+  // attached — e.g. it was selected before the custom-types settings fetch
+  // (useEnabledSourceTypes) resolved, so the dropdown's own onValueChange
+  // had nothing to look up yet. Runs whenever customTypes finishes loading
+  // or the section's saved type changes, not just at selection time.
+  useEffect(() => {
+    const match = customTypes.find((c) => c.key === dataSource.type);
+    if (match?.field && dataSource.field !== match.field) {
+      updateDataSource({ field: match.field });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customTypes, dataSource.type]);
 
   const updateProp = (name: string, value: unknown) =>
     onChange({ props: { ...section.props, [name]: value } });
@@ -116,7 +206,7 @@ export function PropertiesPanel({
   }, [section.id]);
 
   return (
-    <div className="space-y-6 cursor-row-resize h-200 overflow-y-auto overflow-x-hidden p-2">
+    <div className="space-y-6 cursor-row-resize h-240 overflow-y-auto overflow-x-hidden p-2">
       <div>
         <h3 className="mb-3 text-sm font-semibold">{component?.name ?? section.type}</h3>
         <div className="space-y-3">
@@ -575,14 +665,19 @@ export function PropertiesPanel({
         <h3 className="mb-3 text-sm font-semibold">Data Source</h3>
         <div className="space-y-3">
           <Field label="Source Type">
-            <Select value={dataSource.type} onValueChange={(v: string) => updateDataSource({ type: v as DataSourceType })}>
+            <Select
+              value={dataSource.type}
+              onValueChange={(v: string) =>
+                updateDataSource({ type: v as DataSourceType, field: customTypes.find((c) => c.key === v)?.field })
+              }
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {DATA_SOURCE_TYPES.map((t) => (
+                {dataSourceTypes.map((t) => (
                   <SelectItem key={t} value={t}>
-                    {DATA_SOURCE_LABELS[t] ?? t}
+                    {dataSourceLabel(t)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -595,11 +690,20 @@ export function PropertiesPanel({
               onChange={(e) => updateDataSource({ limit: Number(e.target.value) })}
             />
           </Field>
-          {dataSource.type === "category" && (
-            <Field label="Category Slug">
+          {dataSource.field && (
+            <Field label={`Value (matched against "${dataSource.field}")`}>
               <Input
-                value={dataSource.category_slug ?? ""}
-                onChange={(e) => updateDataSource({ category_slug: e.target.value })}
+                value={dataSource.field_value ?? ""}
+                onChange={(e) => updateDataSource({ field_value: e.target.value })}
+                placeholder="e.g. an author's id, or a slug"
+              />
+            </Field>
+          )}
+          {dataSource.type === "category" && (
+            <Field label="Categories">
+              <CategoryMultiSelect
+                value={dataSource.category_slugs ?? (dataSource.category_slug ? [dataSource.category_slug] : [])}
+                onChange={(slugs) => updateDataSource({ category_slugs: slugs, category_slug: undefined })}
               />
             </Field>
           )}
@@ -673,6 +777,26 @@ export function PropertiesPanel({
               onChange={(e) =>
                 onChange({
                   config: { ...section.config, spacing: { ...section.config.spacing, bottom: Number(e.target.value) } },
+                })
+              }
+            />
+          </Field>
+          <Field label="Left">
+            <Input
+              type="number"
+              value={section.config.spacing.left ?? 0}
+              onChange={(e) =>
+                onChange({ config: { ...section.config, spacing: { ...section.config.spacing, left: Number(e.target.value) } } })
+              }
+            />
+          </Field>
+          <Field label="Right">
+            <Input
+              type="number"
+              value={section.config.spacing.right ?? 0}
+              onChange={(e) =>
+                onChange({
+                  config: { ...section.config, spacing: { ...section.config.spacing, right: Number(e.target.value) } },
                 })
               }
             />

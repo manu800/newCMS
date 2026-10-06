@@ -20,8 +20,10 @@ from app.api import (
     pwa_targets,
     tags,
     themes,
+    users,
     versions,
 )
+from app.api import settings as settings_api
 from app.core.config import settings
 
 app = FastAPI(title="CMS-PWA Platform API", version="0.1.0")
@@ -57,6 +59,8 @@ app.include_router(content_items.router)
 app.include_router(assets.router)
 app.include_router(pwa.router)
 app.include_router(pwa_targets.router)
+app.include_router(users.router)
+app.include_router(settings_api.router)
 app.include_router(versions.router)
 
 

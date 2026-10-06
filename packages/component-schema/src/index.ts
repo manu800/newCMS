@@ -52,4 +52,5 @@ export const DATA_SOURCE_LABELS: Record<string, string> = {
   manual: "Manual Selection",
   video: "Videos",
   search: "Search Query",
+  authors: "Authors",
 };

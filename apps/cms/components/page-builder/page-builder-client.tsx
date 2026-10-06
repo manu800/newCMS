@@ -49,7 +49,7 @@ function emptySection(type: Section["type"], component: CmsComponent | undefined
     variant: component?.variants[0]?.slug,
     title: component?.name,
     data_source: undefined,
-    config: { columns: { mobile: 1, tablet: 2, desktop: 3 }, spacing: { top: 20, bottom: 20 } },
+    config: { columns: { mobile: 1, tablet: 2, desktop: 3 }, spacing: { top: 20, bottom: 20, left: 0, right: 0 } },
     props,
   };
 }

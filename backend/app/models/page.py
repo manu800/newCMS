@@ -24,9 +24,16 @@ class DataSource(MongoBaseModel):
     limit: int = 10
     category_id: Optional[str] = None
     category_slug: Optional[str] = None
+    category_slugs: Optional[list[str]] = None
     tag: Optional[str] = None
     query: Optional[str] = None
     article_ids: list[str] = Field(default_factory=list)
+    # Only set for a custom Source Type defined with a bound field (Content
+    # Models → Source types → Add) — resolves generically across every
+    # content_type by matching data.<field> against field_value, instead of
+    # the plain content_type-equality fallback every other custom type uses.
+    field: Optional[str] = None
+    field_value: Optional[str] = None
 
 
 class ResponsiveColumns(MongoBaseModel):
@@ -38,6 +45,8 @@ class ResponsiveColumns(MongoBaseModel):
 class SectionSpacing(MongoBaseModel):
     top: int = 20
     bottom: int = 20
+    left: int = 0
+    right: int = 0
 
 
 class SectionConfig(MongoBaseModel):

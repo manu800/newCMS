@@ -4,12 +4,12 @@ from app.core.config import settings
 
 _client = None
 
-# Served through the beta.hooknews.com CloudFront distribution, which has a
+# Served through the betacdn.hook.online CloudFront distribution, which has a
 # /cms-uploads/* cache behavior routed at the S3 bucket (the bucket itself
 # blocks all direct public access — objects are only reachable via this CDN
 # path). Keys are stored under this same prefix.
 S3_KEY_PREFIX = "cms-uploads/"
-ASSET_CDN_DOMAIN = "beta.hooknews.com"
+ASSET_CDN_DOMAIN = "betacdn.hook.online"
 
 
 def get_s3_client():

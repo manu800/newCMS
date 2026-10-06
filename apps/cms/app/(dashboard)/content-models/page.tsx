@@ -18,6 +18,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { SIDEBAR_MODELS_CHANGED } from "@/components/layout/sidebar";
+import { SidebarOrderEditor } from "@/components/content-models/sidebar-order-editor";
+import { SourceTypesEditor } from "@/components/content-models/source-types-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,8 +60,12 @@ const TYPE_OPTIONS = [
   "color",
   "category",
   "tag",
+  "author",
   "date",
   "datetime",
+  "cards",
+  "suggestion_links",
+  "richtext",
 ];
 
 // Display-only label lookup for Article's known tabs — Tab is a free-text
@@ -74,7 +81,17 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/(^_|_$)/g, "");
 }
 
-const EMPTY_CUSTOM_FIELD = { key: "", label: "", type: "text", tab: "content", required: false };
+const OPTIONS_TYPES = new Set(["select", "multiselect"]);
+
+function parseOptions(s: string): string[] | undefined {
+  const parsed = s
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  return parsed.length ? parsed : undefined;
+}
+
+const EMPTY_CUSTOM_FIELD = { key: "", label: "", type: "text", tab: "content", required: false, options: "" };
 
 export default function ContentModelsPage() {
   const { current } = useProperty();
@@ -142,6 +159,19 @@ export default function ContentModelsPage() {
     }
   };
 
+  const toggleSidebar = async (show: boolean) => {
+    if (!model) return;
+    setModel({ ...model, show_in_sidebar: show });
+    try {
+      await api.put<ContentModel>(`/content-models/${model.id}`, { show_in_sidebar: show });
+      window.dispatchEvent(new Event(SIDEBAR_MODELS_CHANGED));
+      toast.success(show ? "Added to sidebar" : "Removed from sidebar");
+    } catch {
+      toast.error("Failed to update — reloading");
+      load();
+    }
+  };
+
   const fields = (model?.fields ?? []).slice().sort((a, b) => a.order - b.order);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -191,6 +221,7 @@ export default function ContentModelsPage() {
         required: customField.required,
         visible: true,
         order: fields.length,
+        options: OPTIONS_TYPES.has(customField.type) ? parseOptions(customField.options) : undefined,
       },
     ]);
     setAddOpen(false);
@@ -284,6 +315,8 @@ export default function ContentModelsPage() {
           <Button variant="outline" size="sm" className="w-full" onClick={() => setNewModelOpen(true)}>
             <Plus className="mr-1 h-3.5 w-3.5" /> New model
           </Button>
+          <SidebarOrderEditor />
+          <SourceTypesEditor />
         </div>
 
         <div className="rounded-lg border-0 bg-card p-4 shadow-[0_10px_30px_0_rgba(17,38,146,0.05)]">
@@ -299,13 +332,21 @@ export default function ContentModelsPage() {
                 </Link>
               )}
             </div>
-            <Button
-              size="sm"
-              onClick={() => setAddOpen(true)}
-              disabled={!model || (isArticle && addableCatalog.length === 0)}
-            >
-              <Plus className="mr-1 h-3.5 w-3.5" /> Add field
-            </Button>
+            <div className="flex items-center gap-3">
+              {!isArticle && model && (
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  Show in sidebar
+                  <Switch checked={!!model.show_in_sidebar} onCheckedChange={toggleSidebar} />
+                </label>
+              )}
+              <Button
+                size="sm"
+                onClick={() => setAddOpen(true)}
+                disabled={!model || (isArticle && addableCatalog.length === 0)}
+              >
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add field
+              </Button>
+            </div>
           </div>
 
           {model === null ? (
@@ -466,6 +507,17 @@ export default function ContentModelsPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {OPTIONS_TYPES.has(customField.type) && (
+                <div className="space-y-2">
+                  <Label>Options</Label>
+                  <Input
+                    value={customField.options}
+                    onChange={(e) => setCustomField((f) => ({ ...f, options: e.target.value }))}
+                    placeholder="e.g. Male, Female, Other"
+                  />
+                  <p className="text-xs text-muted-foreground">Comma-separated — these are the choices shown on the form.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Tab</Label>
                 <Input
@@ -550,6 +602,17 @@ export default function ContentModelsPage() {
                   </p>
                 )}
               </div>
+              {OPTIONS_TYPES.has(editing.type) && (
+                <div className="space-y-2">
+                  <Label>Options</Label>
+                  <Input
+                    value={(editing.options ?? []).join(", ")}
+                    onChange={(e) => setEditing({ ...editing, options: parseOptions(e.target.value) })}
+                    placeholder="e.g. Male, Female, Other"
+                  />
+                  <p className="text-xs text-muted-foreground">Comma-separated — these are the choices shown on the form.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Tab</Label>
                 <Input value={editing.tab} onChange={(e) => setEditing({ ...editing, tab: e.target.value })} />

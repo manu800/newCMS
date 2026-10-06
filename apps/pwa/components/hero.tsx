@@ -19,6 +19,7 @@ export function Hero({ section }: PwaComponentProps) {
   const subtitle = (section.props?.subtitle as string) || article?.script_summary;
   const image = (section.props?.image as string) || article?.script_thumbnail;
   const href = article?.script_slug ? `/article/${article.script_slug}` : "#";
+  const hasLink = href !== "#";
   const variant = section.variant ?? "centered";
 
   const containerStyle = containerDesignStyle(section.resolved_design);
@@ -48,7 +49,7 @@ export function Hero({ section }: PwaComponentProps) {
           </p>
         );
       }
-      if (id === "button") {
+      if (id === "button" && hasLink) {
         return (
           <Link
             key={id}
@@ -96,7 +97,7 @@ export function Hero({ section }: PwaComponentProps) {
           src={image}
           alt={title ?? ""}
           loading={imgLoading}
-          className={variant === "split" ? "h-40 w-56 shrink-0 object-cover" : "mx-auto mb-4 h-56 w-full max-w-2xl object-cover"}
+          className={variant === "split" ? "h-48 w-full object-cover sm:h-40 sm:w-56 sm:shrink-0" : "mx-auto mb-4 h-56 w-full max-w-2xl object-cover"}
           style={{ borderRadius: "var(--radius-medium)", ...imgStyle }}
         />
       );
@@ -118,7 +119,7 @@ export function Hero({ section }: PwaComponentProps) {
         </p>
       );
     }
-    if (id === "button") {
+    if (id === "button" && hasLink) {
       return (
         <Link
           key={id}
@@ -145,7 +146,11 @@ export function Hero({ section }: PwaComponentProps) {
 
   return (
     <section
-      className={variant === "split" ? "flex items-center gap-6 p-6 md:p-10" : "p-8 text-center"}
+      className={
+        variant === "split"
+          ? "flex flex-col overflow-hidden sm:flex-row sm:items-center gap-6 p-6 md:p-10"
+          : "overflow-hidden p-8 text-center"
+      }
       style={{ backgroundColor: "var(--color-secondary)", color: "#fff", ...containerStyle }}
     >
       {imageFirst ? (

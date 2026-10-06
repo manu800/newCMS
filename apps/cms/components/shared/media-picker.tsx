@@ -1,6 +1,6 @@
 "use client";
 
-import { FileAudio, Film, ImageIcon, Search } from "lucide-react";
+import { FileAudio, Film, ImageIcon, Music, Play, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -11,11 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MediaDropzone } from "@/components/shared/media-dropzone";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProperty } from "@/hooks/use-property";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { Asset } from "@cms-pwa/shared-types";
+
+const MEDIA_HINT = { image: "JPG, PNG, WEBP or GIF", video: "MP4, WEBM or MOV", audio: "MP3, WAV or M4A" } as const;
 
 const TYPE_ICON = { image: ImageIcon, video: Film, audio: FileAudio } as const;
 const TYPE_LABEL = { image: "image", video: "video", audio: "audio" } as const;
@@ -28,10 +31,14 @@ export function MediaPicker({
   type,
   value,
   onSelect,
+  suggestedName,
 }: {
   type: "image" | "video" | "audio";
   value?: string;
   onSelect: (asset: Asset) => void;
+  /** Falls back to this (e.g. the article's headline) when the upload name
+   * prompt is left blank. */
+  suggestedName?: string;
 }) {
   const { current } = useProperty();
   const [open, setOpen] = useState(false);
@@ -64,6 +71,16 @@ export function MediaPicker({
           <DialogHeader>
             <DialogTitle>Select {TYPE_LABEL[type]} from Media Library</DialogTitle>
           </DialogHeader>
+
+          <MediaDropzone
+            kind={type}
+            hint={MEDIA_HINT[type]}
+            onUploaded={(asset) => {
+              onSelect(asset);
+              setOpen(false);
+            }}
+            suggestedName={suggestedName}
+          />
 
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -102,12 +119,25 @@ export function MediaPicker({
                     value === asset.url && "border-primary ring-2 ring-primary/30"
                   )}
                 >
-                  <div className="flex h-20 w-full items-center justify-center bg-muted">
+                  <div className="relative flex h-20 w-full items-center justify-center overflow-hidden bg-muted">
                     {asset.type === "image" ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={asset.url} alt={asset.name} className="h-full w-full object-cover" />
+                    ) : asset.type === "video" ? (
+                      <>
+                        <video src={asset.url} preload="metadata" muted className="h-full w-full object-cover" />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/10">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+                            <Play className="h-3 w-3 translate-x-0.5 fill-current" />
+                          </span>
+                        </span>
+                      </>
                     ) : (
-                      <Icon className="h-6 w-6 text-muted-foreground" />
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+                          <Music className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
                     )}
                   </div>
                   <p className="truncate p-1.5 text-xs font-medium">{asset.name}</p>

@@ -13,8 +13,12 @@ export type FieldType =
   | "article"
   | "category"
   | "tag"
+  | "author"
   | "date"
-  | "datetime";
+  | "datetime"
+  | "cards"
+  | "suggestion_links"
+  | "richtext";
 
 export type ComponentType =
   | "hero"
@@ -41,7 +45,12 @@ export type DataSourceType =
   | "tag"
   | "manual"
   | "video"
-  | "search";
+  | "search"
+  // Or any custom Content Model's content_type (Video, Quiz, ...), chosen
+  // dynamically in the Page Builder — kept as a literal union above for
+  // autocomplete on the fixed types, loosened here so a section can still
+  // hold an arbitrary content_type string.
+  | (string & {});
 
 export interface ComponentField {
   name: string;
@@ -282,6 +291,19 @@ export interface Tag {
   property_id: string;
 }
 
+export type UserRole = "admin" | "editor" | "designer" | "viewer";
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  avatar?: string;
+  designation?: string;
+  is_author: boolean;
+  is_active: boolean;
+}
+
 export interface ContentModelField {
   key: string;
   label: string;
@@ -300,6 +322,7 @@ export interface ContentModel {
   content_type: string;
   property_id: string;
   fields: ContentModelField[];
+  show_in_sidebar?: boolean;
 }
 
 export interface ContentItem {
@@ -315,9 +338,12 @@ export interface DataSource {
   limit?: number;
   category_id?: string;
   category_slug?: string;
+  category_slugs?: string[];
   tag?: string;
   query?: string;
   article_ids?: string[];
+  field?: string;
+  field_value?: string;
 }
 
 export interface ResponsiveColumns {
@@ -328,7 +354,7 @@ export interface ResponsiveColumns {
 
 export interface SectionConfig {
   columns: ResponsiveColumns;
-  spacing: { top: number; bottom: number };
+  spacing: { top: number; bottom: number; left: number; right: number };
 }
 
 export interface StructureElement {

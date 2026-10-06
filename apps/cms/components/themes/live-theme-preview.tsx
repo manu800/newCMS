@@ -141,5 +141,12 @@ export function LiveThemePreview({
     return <p className="p-8 text-center text-sm text-muted-foreground">Select a PWA target above to preview.</p>;
   }
 
-  return <iframe ref={iframeRef} src={src} title="Live theme preview" className="h-[600px] w-full border-0" />;
+  return (
+    <iframe
+      ref={iframeRef}
+      src={src}
+      title="Live theme preview"
+      className={`w-full border-0 ${device === "mobile" ? "h-[812px]" : "h-[600px]"}`}
+    />
+  );
 }

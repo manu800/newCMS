@@ -8,6 +8,11 @@ class ArticleCreate(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
+    # Only used on create — new articles are stored as a Content Item
+    # (content_type="article") rather than in the legacy common_articles
+    # collection, and Content Items are always property-scoped.
+    property_id: Optional[str] = None
+
     script_headline: Optional[str] = None
     script_slug: Optional[str] = None
     script_content: Optional[str] = None

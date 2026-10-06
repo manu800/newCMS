@@ -44,6 +44,7 @@ async def create_content_model(body: ContentModelCreate):
         "content_type": body.content_type,
         "property_id": body.property_id,
         "fields": [],
+        "show_in_sidebar": False,
     }
     return await content_model_repo.create(data)
 
@@ -71,13 +72,19 @@ async def active_content_model(
         "content_type": content_type,
         "property_id": property_id,
         "fields": _default_fields(content_type),
+        "show_in_sidebar": False,
     }
     return await content_model_repo.create(data)
 
 
 @router.put("/{model_id}", dependencies=[Depends(require_role("editor"))])
 async def update_content_model(model_id: str, body: ContentModelUpdate):
-    model = await content_model_repo.update(model_id, {"fields": [f.model_dump() for f in body.fields]})
+    data: dict = {}
+    if body.fields is not None:
+        data["fields"] = [f.model_dump() for f in body.fields]
+    if body.show_in_sidebar is not None:
+        data["show_in_sidebar"] = body.show_in_sidebar
+    model = await content_model_repo.update(model_id, data)
     if not model:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Content model not found")
     return model

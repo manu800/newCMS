@@ -13,11 +13,33 @@ import {
   Building2,
   MonitorSmartphone,
   LayoutList,
+  Layers,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import { useAuth } from "@/hooks/use-auth";
+import { useProperty } from "@/hooks/use-property";
+import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import type { ContentModel } from "@cms-pwa/shared-types";
+
+// Fired after a Content Model's `show_in_sidebar` is toggled, or the Content
+// section's order is saved, so the sidebar (which only fetches on property
+// change) refreshes without a full reload.
+export const SIDEBAR_MODELS_CHANGED = "cms:sidebar-models-changed";
+
+// The Content section's built-in (non-model-backed) items — exported so the
+// sidebar-order editor can offer them alongside custom content models.
+export const CONTENT_STATIC_ITEMS = [
+  { href: "/articles", label: "Articles", icon: Newspaper },
+  { href: "/categories", label: "Categories", icon: Tag },
+  { href: "/tags", label: "Tags", icon: Tags },
+  { href: "/media-library", label: "Media Library", icon: Images },
+  { href: "/content-models", label: "Content Models", icon: LayoutList },
+];
 
 const NAV_GROUPS = [
   {
@@ -26,13 +48,7 @@ const NAV_GROUPS = [
   },
   {
     label: "Content",
-    items: [
-      { href: "/articles", label: "Articles", icon: Newspaper },
-      { href: "/categories", label: "Categories", icon: Tag },
-      { href: "/tags", label: "Tags", icon: Tags },
-      { href: "/media-library", label: "Media Library", icon: Images },
-      { href: "/content-models", label: "Content Models", icon: LayoutList },
-    ],
+    items: CONTENT_STATIC_ITEMS,
   },
   {
     label: "Design",
@@ -52,8 +68,60 @@ const NAV_GROUPS = [
   },
 ];
 
+const USERS_ITEM = { href: "/users", label: "Users", icon: Users };
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { current } = useProperty();
+  const { can } = useAuth();
+  const [sidebarModels, setSidebarModels] = useState<ContentModel[]>([]);
+  const [contentOrder, setContentOrder] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!current) return;
+    const load = () => {
+      api
+        .get<ContentModel[]>(`/content-models?property_id=${current.id}`)
+        .then((list) => setSidebarModels(list.filter((m) => m.show_in_sidebar)))
+        .catch(() => setSidebarModels([]));
+      api
+        .get<{ order: string[] }>("/settings/sidebar-order")
+        .then((res) => setContentOrder(res.order))
+        .catch(() => setContentOrder([]));
+    };
+    load();
+    window.addEventListener(SIDEBAR_MODELS_CHANGED, load);
+    return () => window.removeEventListener(SIDEBAR_MODELS_CHANGED, load);
+  }, [current?.id]);
+
+  const groups = NAV_GROUPS.map((group) => {
+    if (group.label === "Content") {
+      const contentItems = [
+        ...group.items,
+        ...sidebarModels.map((m) => ({
+          href: `/content/${m.content_type}`,
+          label: m.name,
+          icon: Layers,
+        })),
+      ];
+      const sorted =
+        contentOrder.length === 0
+          ? contentItems
+          : [...contentItems].sort((a, b) => {
+              const ai = contentOrder.indexOf(a.href);
+              const bi = contentOrder.indexOf(b.href);
+              if (ai === -1 && bi === -1) return 0;
+              if (ai === -1) return 1;
+              if (bi === -1) return -1;
+              return ai - bi;
+            });
+      return { ...group, items: sorted };
+    }
+    if (group.label === "Configuration" && can("admin")) {
+      return { ...group, items: [...group.items, USERS_ITEM] };
+    }
+    return group;
+  });
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
@@ -68,7 +136,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pt-2 pb-4">
-        {NAV_GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.label}>
             <div className="mb-2 px-3 text-base font-medium text-foreground">{group.label}</div>
             <div className="space-y-0.5">

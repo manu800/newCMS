@@ -19,6 +19,7 @@ const VARIANT_COLS: Record<string, number> = {
 
 export function NewsGrid({ section }: PwaComponentProps) {
   const cols = VARIANT_COLS[section.variant ?? ""] ?? section.config.columns.desktop ?? 3;
+  const items = section.items ?? [];
 
   return (
     <section
@@ -26,18 +27,28 @@ export function NewsGrid({ section }: PwaComponentProps) {
       style={{ paddingTop: "var(--spacing-md)", paddingBottom: "var(--spacing-md)", ...containerDesignStyle(section.resolved_design) }}
     >
       <SectionHeading title={section.title} style={textDesignStyle(section.resolved_design)} />
-      <div className={`grid gap-4 ${COLS[cols] ?? COLS[3]}`}>
-        {(section.items ?? []).map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
-            variant="vertical"
-            showSummary={!!section.props?.showExcerpt}
-            imageStyle={imageDesignStyle(section.resolved_design)}
-            imageLoading={imageLoadingAttr(section.resolved_design)}
-          />
-        ))}
-      </div>
+      {items.length === 1 ? (
+        <ArticleCard
+          article={items[0]}
+          variant="featured"
+          showSummary={!!section.props?.showExcerpt}
+          imageStyle={imageDesignStyle(section.resolved_design)}
+          imageLoading={imageLoadingAttr(section.resolved_design)}
+        />
+      ) : (
+        <div className={`grid gap-4 ${COLS[cols] ?? COLS[3]}`}>
+          {items.map((article) => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              variant="vertical"
+              showSummary={!!section.props?.showExcerpt}
+              imageStyle={imageDesignStyle(section.resolved_design)}
+              imageLoading={imageLoadingAttr(section.resolved_design)}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

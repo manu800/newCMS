@@ -280,7 +280,7 @@ COMPONENT_DEFS = [
     },
     {
         "name": "Carousel", "slug": "carousel", "type": "carousel",
-        "variants": [{"name": "Cards", "slug": "cards"}, {"name": "Full Width", "slug": "fullwidth"}],
+        "variants": [{"name": "Cards", "slug": "cards"}, {"name": "Full Width", "slug": "fullwidth"}, {"name": "Avatars", "slug": "avatars"}, {"name": "News Grid", "slug": "news-grid"}],
         "fields": [
             {"name": "autoplay", "label": "Autoplay", "type": "boolean", "default": True},
             {"name": "interval", "label": "Interval (ms)", "type": "number", "default": 4000},
@@ -331,8 +331,10 @@ COMPONENT_DEFS = [
             {"name": "adSlotId", "label": "Ad Slot ID", "type": "text"},
             {
                 "name": "size", "label": "Size", "type": "select",
-                "options": ["300x250", "728x90", "320x50"], "default": "300x250",
+                "options": ["300x250", "728x90", "320x50", "160x600", "970x250", "300x600"], "default": "300x250",
             },
+            {"name": "image", "label": "Ad Image", "type": "image", "description": "Static image to show instead of an ad-network slot."},
+            {"name": "link", "label": "Click-through URL", "type": "text", "description": "Where the ad image links to when clicked."},
         ],
     },
     {

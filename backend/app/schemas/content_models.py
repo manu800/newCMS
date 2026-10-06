@@ -1,10 +1,13 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 from app.models.content_model import ContentModelField
 
 
 class ContentModelUpdate(BaseModel):
-    fields: list[ContentModelField]
+    fields: Optional[list[ContentModelField]] = None
+    show_in_sidebar: Optional[bool] = None
 
 
 class ContentModelCreate(BaseModel):
